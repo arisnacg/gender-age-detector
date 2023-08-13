@@ -65,6 +65,17 @@ def detectAge(ageNet,blob):
     age = ages[agePrediction[0].argmax()]
     return age
 
+# func to draw gender and age label
+def drawAgeAndGenderLabel(frame, label, x, y):
+    cv2.putText(
+            frame,
+            label,
+            (x, y),
+            cv2.FONT_HERSHEY_COMPLEX_SMALL,
+            1,
+            (0, 255, 0),
+            2,
+        )
 
 # use webcam
 cap = cv2.VideoCapture(0)
@@ -83,8 +94,7 @@ while True:
         )
         gender = detectGender(genderNet,blob)
         age = detectAge(ageNet, blob)
-        # debug
-        print(age)
+        drawAgeAndGenderLabel(frame, f"{gender}, {age}", box[0], box[3]+30)
 
 
     cv2.imshow("Age-Gender-Detector", frame)
