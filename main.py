@@ -14,6 +14,21 @@ genderModel = "./models/gender_net.caffemodel"
 genderNet = cv2.dnn.readNet(genderModel, genderProto)
 genders = ["Male", "Female"]
 
+# import age model
+ageProto = "./models/age_deploy.prototxt"
+ageModel = "./models/age_net.caffemodel"
+ageNet = cv2.dnn.readNet(ageModel, ageProto)
+ages = [
+    "(0-2)",
+    "(4-6)",
+    "(8-12)",
+    "(15-20)",
+    "(25-32)",
+    "(38-43)",
+    "(48-53)",
+    "(60-100)",
+]
+
 # model means
 MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
 
@@ -43,6 +58,13 @@ def detectGender(genderNet,blob):
     gender = genders[genderPrediction[0].argmax()]
     return gender
 
+# func to detect age
+def detectAge(ageNet,blob):
+    ageNet.setInput(blob)
+    agePrediction = ageNet.forward()
+    age = ages[agePrediction[0].argmax()]
+    return age
+
 
 # use webcam
 cap = cv2.VideoCapture(0)
@@ -60,8 +82,10 @@ while True:
             detectedFace, 1.0, (227, 227), MODEL_MEAN_VALUES, swapRB=False
         )
         gender = detectGender(genderNet,blob)
+        age = detectAge(ageNet, blob)
         # debug
-        print(gender)
+        print(age)
+
 
     cv2.imshow("Age-Gender-Detector", frame)
     # exit camera capture with pressing "q"
