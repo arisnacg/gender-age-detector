@@ -1,9 +1,21 @@
 import cv2
 
+# padding for face rectangle
+PADDING = 20
+
 # import face detector model
 faceProto = "./models/opencv_face_detector.pbtxt"
 faceModel = "./models/opencv_face_detector_uint8.pb"
 faceNet = cv2.dnn.readNet(faceModel, faceProto)
+
+# import gender model
+genderProto = "./models/gender_deploy.prototxt"
+genderModel = "./models/gender_net.caffemodel"
+genderNet = cv2.dnn.readNet(genderModel, genderProto)
+genders = ["Male", "Female"]
+
+# model means
+MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
 
 # func to detect and draw reactangle to the face
 def drawFaceRectangle(faceNet, frame):
@@ -24,14 +36,33 @@ def drawFaceRectangle(faceNet, frame):
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 4)
     return frame, boxes
 
+# func to detect gender
+def detectGender(genderNet,blob):
+    genderNet.setInput(blob)
+    genderPrediction = genderNet.forward()
+    gender = genders[genderPrediction[0].argmax()]
+    return gender
+
+
 # use webcam
 cap = cv2.VideoCapture(0)
-
 
 while True:
     # show camera capture
     ret, frame = cap.read()
-    drawFaceRectangle(faceNet, frame)
+    frame, boxes = drawFaceRectangle(faceNet, frame)
+    for box in boxes:
+        detectedFace = frame[
+            max(0, box[1] - PADDING) : min(box[3] + PADDING, frame.shape[0] - 1),
+            max(0, box[0] - PADDING) : min(box[2] + PADDING, frame.shape[1] - 1),
+        ]
+        blob = cv2.dnn.blobFromImage(
+            detectedFace, 1.0, (227, 227), MODEL_MEAN_VALUES, swapRB=False
+        )
+        gender = detectGender(genderNet,blob)
+        # debug
+        print(gender)
+
     cv2.imshow("Age-Gender-Detector", frame)
     # exit camera capture with pressing "q"
     if cv2.waitKey(1) & 0xFF == ord("q"):
